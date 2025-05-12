@@ -1,0 +1,3 @@
+[submodule "emotion-kit"]
+	path = emotion-kit
+	url = https://github.com/AiraStack/emotion-kit.git
