@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <group>
+        <!-- 机器人头部（方形） -->
+        <path
+            android:name="head"
+            android:fillColor="#B0BEC5"
+            android:pathData="M10,10h80v80h-80z" />
+        <!-- 机器人天线 -->
+        <path
+            android:name="antenna"
+            android:fillColor="#90A4AE"
+            android:pathData="M48,5h4v15h-4z" />
+        <!-- 天线球 -->
+        <path
+            android:name="antennaTip"
+            android:fillColor="#FFEB3B"
+            android:pathData="M47,2a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+        <!-- 左眼 group -->
+        <group
+            android:name="eyeGroup"
+            android:pivotX="42"
+            android:pivotY="41">
+            <path
+                android:name="eye"
+                android:fillColor="#212121"
+                android:pathData="M37,38a5,3 0 1,0 10,0a5,3 0 1,0 -10,0" />
+        </group>
+        <!-- 右眼 group -->
+        <group
+            android:name="rightEyeGroup"
+            android:pivotX="62"
+            android:pivotY="41">
+            <path
+                android:name="rightEye"
+                android:fillColor="#212121"
+                android:pathData="M57,38a5,3 0 1,0 10,0a5,3 0 1,0 -10,0" />
+        </group>
+    </group>
+</vector> 
