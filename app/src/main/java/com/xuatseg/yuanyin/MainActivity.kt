@@ -3,7 +3,6 @@ package com.xuatseg.yuanyin
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
@@ -143,9 +141,9 @@ fun ScenariosDemoScreen() {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    imageVector = emotionManager.getCurrentEmotionVector(),
-                    contentDescription = "Current robot emotion",
+                // 使用我们的自定义EmotionImage组件
+                EmotionImage(
+                    emotionType = currentEmotion,
                     modifier = Modifier.size(80.dp)
                 )
                 
@@ -273,9 +271,9 @@ fun RobotEmotionsScreen() {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    imageVector = RobotEmotions.getEmotion(selectedEmotion),
-                    contentDescription = "Robot ${selectedEmotion.name.lowercase()} face",
+                // 使用我们的自定义EmotionImage组件
+                EmotionImage(
+                    emotionType = selectedEmotion,
                     modifier = Modifier.size(80.dp)
                 )
                 
@@ -371,10 +369,11 @@ fun EmotionCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                imageVector = RobotEmotions.getEmotion(emotionType),
-                contentDescription = "Robot ${emotionType.name.lowercase()} face",
-                modifier = Modifier.size(60.dp)
+            // 使用我们的自定义EmotionImage组件
+            EmotionImage(
+                emotionType = emotionType,
+                modifier = Modifier.size(60.dp),
+                size = 60
             )
             
             Text(
@@ -413,20 +412,4 @@ fun getEmotionShortName(emotionType: EmotionType): String {
 enum class DemoTab {
     SHOWCASE,  // 表情展示
     SCENARIOS  // 业务场景
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RobotEmotionsScreenPreview() {
-    YuanYinTheme {
-        RobotEmotionsScreen()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ScenariosDemoScreenPreview() {
-    YuanYinTheme {
-        ScenariosDemoScreen()
-    }
 }
