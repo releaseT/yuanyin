@@ -32,6 +32,11 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import com.airastack.emotionkit.EmotionType
+import com.airastack.emotionkit.strategy.EmotionStrategyManager
+import com.airastack.emotionkit.RobotEmotions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +56,10 @@ fun MainScreen(
     // 新增遮罩弹窗状态
     var showSwitchMask by remember { mutableStateOf(false) }
     var showSettingsMask by remember { mutableStateOf(false) }
+    var showEmotionMask by remember { mutableStateOf(false) }
+    
+    // 获取机器人表情
+    val robotExpression by viewModel.robotExpression.collectAsState()
 
     Box(
         modifier = Modifier
@@ -65,23 +74,45 @@ fun MainScreen(
                 )
             )
     ) {
-        // 1. 视频背景最底层
-        val context = LocalContext.current
-        val videoUri = remember {
-            Uri.parse("android.resource://" + context.packageName + "/raw/face_happy")
-        }
-        VideoPlayer(
-            videoUri = videoUri,
-            modifier = Modifier.fillMaxSize(),
-            repeat = true,
-            mute = true
-        )
+        // 视频背景部分已被注释掉
+        
         // 2. 半透明遮罩增强科幻感
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xAA0F2027))
         )
+        // 2.5 机器人表情显示区域 (新增)
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(240.dp)
+                .background(Color(0x33000000), shape = MaterialTheme.shapes.extraLarge)
+                .border(
+                    width = 2.dp,
+                    color = Color(0xFF00CCFF),  // 青蓝色边框，与emotion-kit的颜色保持一致
+                    shape = MaterialTheme.shapes.extraLarge
+                )
+                .clickable { showEmotionMask = true },  // 点击显示表情选择弹窗
+            contentAlignment = Alignment.Center
+        ) {
+            // 显示机器人表情
+            robotExpression?.let { 
+                Image(
+                    imageVector = it,
+                    contentDescription = "Robot emotion",
+                    modifier = Modifier.size(180.dp)
+                )
+            } ?: run {
+                // 如果表情为空，显示默认文本表情
+                Text(
+                    text = "^_^",
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF00CCFF)
+                )
+            }
+        }
         // 3. 右侧竖向排列按钮
         Column(
             modifier = Modifier
@@ -197,6 +228,194 @@ fun MainScreen(
                             Text("昵称：未来机器人", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("签名：探索未来，连接智能世界。", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 6. 表情选择弹窗 (新增)
+        if (showEmotionMask) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x66000000)) // 遮罩外部区域
+                    .clickable { showEmotionMask = false }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .width(320.dp)
+                        .background(Color(0xEE222B3A), shape = MaterialTheme.shapes.medium)
+                        .clickable(enabled = false) { }, // 禁止遮罩内容冒泡
+                        
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("表情选择", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // 表情选择选项
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0x33000000), shape = MaterialTheme.shapes.medium)
+                                    .border(1.dp, Color(0xFF00CCFF), shape = MaterialTheme.shapes.medium)
+                                    .clickable { 
+                                        viewModel.setEmotion(EmotionType.HAPPY)
+                                        showEmotionMask = false
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    imageVector = RobotEmotions.getEmotion(EmotionType.HAPPY),
+                                    contentDescription = "Happy",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0x33000000), shape = MaterialTheme.shapes.medium)
+                                    .border(1.dp, Color(0xFF00CCFF), shape = MaterialTheme.shapes.medium)
+                                    .clickable { 
+                                        viewModel.setEmotion(EmotionType.NEUTRAL)
+                                        showEmotionMask = false 
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    imageVector = RobotEmotions.getEmotion(EmotionType.NEUTRAL),
+                                    contentDescription = "Neutral",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0x33000000), shape = MaterialTheme.shapes.medium)
+                                    .border(1.dp, Color(0xFF00CCFF), shape = MaterialTheme.shapes.medium)
+                                    .clickable { 
+                                        viewModel.setEmotion(EmotionType.SATISFIED)
+                                        showEmotionMask = false 
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    imageVector = RobotEmotions.getEmotion(EmotionType.SATISFIED),
+                                    contentDescription = "Satisfied",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0x33000000), shape = MaterialTheme.shapes.medium)
+                                    .border(1.dp, Color(0xFF00CCFF), shape = MaterialTheme.shapes.medium)
+                                    .clickable { 
+                                        viewModel.setEmotion(EmotionType.SUSPICIOUS)
+                                        showEmotionMask = false 
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    imageVector = RobotEmotions.getEmotion(EmotionType.SUSPICIOUS),
+                                    contentDescription = "Suspicious",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0x33000000), shape = MaterialTheme.shapes.medium)
+                                    .border(1.dp, Color(0xFF00CCFF), shape = MaterialTheme.shapes.medium)
+                                    .clickable { 
+                                        viewModel.setEmotion(EmotionType.PANIC)
+                                        showEmotionMask = false 
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    imageVector = RobotEmotions.getEmotion(EmotionType.PANIC),
+                                    contentDescription = "Panic",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0x33000000), shape = MaterialTheme.shapes.medium)
+                                    .border(1.dp, Color(0xFF00CCFF), shape = MaterialTheme.shapes.medium)
+                                    .clickable { 
+                                        viewModel.setEmotion(EmotionType.REPAIR)
+                                        showEmotionMask = false 
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    imageVector = RobotEmotions.getEmotion(EmotionType.REPAIR),
+                                    contentDescription = "Repair",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // 表情策略选择
+                        Text("表情策略", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Button(
+                                onClick = { 
+                                    viewModel.switchEmotionStrategy("default")
+                                    showEmotionMask = false
+                                }
+                            ) {
+                                Text("默认策略")
+                            }
+                            
+                            Button(
+                                onClick = { 
+                                    viewModel.switchEmotionStrategy("conservative")
+                                    showEmotionMask = false
+                                }
+                            ) {
+                                Text("保守策略")
+                            }
+                            
+                            Button(
+                                onClick = { 
+                                    viewModel.switchEmotionStrategy("expressive")
+                                    showEmotionMask = false
+                                }
+                            ) {
+                                Text("表现策略")
+                            }
                         }
                     }
                 }

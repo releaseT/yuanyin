@@ -10,6 +10,12 @@ import com.xuatseg.yuanyin.ui.mode.ModeSwitchEvent
 import com.xuatseg.yuanyin.ui.mode.ModeSwitchUiState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.xuatseg.yuanyin.ui.emotion.RobotEmotionManager
+import com.xuatseg.yuanyin.ui.emotion.SystemStatus
+import com.xuatseg.yuanyin.ui.emotion.UserInteraction
+import com.airastack.emotionkit.EmotionType
+import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.delay
 
 /**
  * 主视图模型
@@ -34,10 +40,18 @@ class MainViewModel(
 
     // 模式状态
     private val _modeState = MutableStateFlow<ModeState?>(null)
+    
+    // 机器人表情管理器
+    private val emotionManager = RobotEmotionManager()
+    
+    // 机器人表情状态流
+    private val _robotExpression = MutableStateFlow<ImageVector?>(null)
+    val robotExpression: StateFlow<ImageVector?> = _robotExpression.asStateFlow()
 
     init {
         initializeMode()
         observeModeChanges()
+        updateRobotExpression()
     }
 
     /**
@@ -62,6 +76,27 @@ class MainViewModel(
         viewModelScope.launch {
             modeManager.observeMode().collect { mode ->
                 updateModeSwitchUiState(mode)
+            }
+        }
+    }
+
+    /**
+     * 更新机器人表情
+     */
+    private fun updateRobotExpression() {
+        viewModelScope.launch {
+            // 初始表情设置为中性
+            emotionManager.setEmotion(EmotionType.NEUTRAL)
+            // 获取当前表情并更新状态
+            _robotExpression.value = emotionManager.getCurrentEmotionVector()
+            
+            // 创建一个协程来监视表情变化
+            launch {
+                while(true) {
+                    // 定期检查表情是否变化并更新
+                    _robotExpression.value = emotionManager.getCurrentEmotionVector()
+                    delay(100) // 每100毫秒检查一次
+                }
             }
         }
     }
@@ -133,15 +168,24 @@ class MainViewModel(
                         toMode = mode,
                         duration = 0 // 实际实现中需要计算真实的切换时间
                     )
+                    
+                    // 更新表情为开心状态
+                    emotionManager.setEmotion(EmotionType.HAPPY)
+                    delay(2000) // 2秒后恢复中性表情
+                    emotionManager.setEmotion(EmotionType.NEUTRAL)
                 } else {
                     _modeSwitchUiState.update {
                         it.copy(error = "模式不可用")
                     }
+                    // 更新表情为不满状态
+                    emotionManager.setEmotion(EmotionType.SUSPICIOUS)
                 }
             } catch (e: Exception) {
                 _modeSwitchUiState.update {
                     it.copy(error = e.message ?: "切换模式失败")
                 }
+                // 更新表情为紧急状态
+                emotionManager.setEmotion(EmotionType.PANIC)
             } finally {
                 _modeSwitchUiState.update { it.copy(isLoading = false) }
             }
@@ -179,10 +223,22 @@ class MainViewModel(
             isConnected = isConnected,
             error = if (!isConnected) "连接断开" else null
         )
+        
+        // 更新表情状态
+        if (isConnected) {
+            emotionManager.setEmotion(EmotionType.SATISFIED)
+        } else {
+            emotionManager.setEmotion(EmotionType.SUSPICIOUS)
+        }
     }
 
     fun updateBatteryLevel(level: Int) {
         _botState.value = _botState.value.copy(batteryLevel = level)
+        
+        // 电量低于20%时更新表情状态
+        if (level < 20) {
+            emotionManager.updateSystemStatus(SystemStatus.LOW_BATTERY)
+        }
     }
 
     fun updateWorkMode(mode: WorkMode) {
@@ -191,6 +247,45 @@ class MainViewModel(
 
     fun setError(error: String?) {
         _botState.value = _botState.value.copy(error = error)
+        
+        // 有错误时更新表情状态
+        if (error != null) {
+            emotionManager.updateSystemStatus(SystemStatus.ERROR)
+        } else {
+            emotionManager.updateSystemStatus(SystemStatus.NORMAL)
+        }
+    }
+    
+    /**
+     * 语音唤醒时更新表情
+     */
+    fun updateVoiceWakeExpression() {
+        viewModelScope.launch {
+            emotionManager.updateUserInteraction(UserInteraction.GREETING)
+            delay(2000) // 2秒后恢复中性表情
+            emotionManager.setEmotion(EmotionType.NEUTRAL)
+        }
+    }
+    
+    /**
+     * 获取当前表情矢量图
+     */
+    fun getCurrentEmotionVector(): ImageVector {
+        return emotionManager.getCurrentEmotionVector()
+    }
+    
+    /**
+     * 切换表情策略
+     */
+    fun switchEmotionStrategy(strategyName: String) {
+        emotionManager.switchStrategy(strategyName)
+    }
+
+    /**
+     * 直接设置表情（用于UI调用）
+     */
+    fun setEmotion(emotionType: EmotionType) {
+        emotionManager.setEmotion(emotionType)
     }
 
     override fun onCleared() {
