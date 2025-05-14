@@ -1,3 +1,7 @@
 [submodule "emotion-kit"]
 	path = emotion-kit
 	url = https://github.com/AiraStack/emotion-kit.git
+[submodule "voice-kit"]
+	path = voice-kit
+	url = https://github.com/AiraStack/voice-kit.git
+	branch = develop/poc
